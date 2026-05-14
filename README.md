@@ -8,5 +8,5 @@ Temel amacı aradığınız dosyayı ultra hızlı şekilde tüm disklerde arama
 Milyonlarca dosyayı 20 saniyede tarayabilicek hızdadır (PC'den pc ye değişebilir.)
 
 <p align="center">
-  <img src="https://cdn.r10.net/editor/158119/976560249.png" width="300">
+  <img src="https://cdn.r10.net/editor/158119/976560249.png" width="1000">
 </p>
