@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Disk Scanner</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+body{background:rgb(30,30,30);color:#fff;min-height:100vh;padding:30px 20px}
+.wrap{max-width:1200px;margin:0 auto}
+h1{font-size:32px;font-weight:700;background:linear-gradient(90deg,#ff1a1a,#ff6666,#ff1a1a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 30px rgba(255,30,30,.4);letter-spacing:2px}
+.sub{color:#888;margin:4px 0 20px;font-size:12px}
+.panel{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:14px;margin-bottom:14px}
+.label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#ff6666;margin-bottom:10px;font-weight:600}
+.drives{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.drive{padding:8px 14px;background:rgb(30,30,30);border:1px solid #444;border-radius:20px;font-size:12px;cursor:pointer;transition:.2s;user-select:none;color:#aaa}
+.drive.on{border-color:#ff1a1a;color:#ff6666;box-shadow:0 0 12px rgba(255,30,30,.4);background:#2a0a0a}
+.drive small{display:block;font-size:9px;opacity:.6;margin-top:2px}
+.mini{padding:6px 12px;background:transparent;border:1px solid #555;border-radius:6px;color:#aaa;font-size:11px;cursor:pointer;margin-left:6px}
+.mini:hover{border-color:#ff1a1a;color:#ff6666}
+input,select{padding:14px 18px;background:rgb(30,30,30);border:2px solid #333;border-radius:10px;color:#fff;font-size:14px;outline:none;transition:.2s;width:100%}
+input:focus,select:focus{border-color:#ff1a1a;box-shadow:0 0 20px rgba(255,30,30,.4)}
+.bar{display:flex;gap:10px;align-items:stretch;margin-bottom:14px}
+.bar input{flex:1}
+button{padding:0 28px;background:linear-gradient(135deg,#ff1a1a,#cc0000);border:none;border-radius:10px;color:#fff;font-weight:600;cursor:pointer;box-shadow:0 0 18px rgba(255,30,30,.5);transition:.2s;font-size:14px}
+button:hover{transform:translateY(-1px);box-shadow:0 0 28px rgba(255,30,30,.8)}
+button.stop{background:linear-gradient(135deg,#555,#222);box-shadow:none}
+.recent{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:5px 10px 5px 12px;background:rgb(30,30,30);border:1px solid #444;border-radius:14px;font-size:11px;color:#bbb;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:8px}
+.chip:hover{border-color:#ff1a1a;color:#ff6666}
+.chip i{color:#888;font-size:12px;padding:2px 4px;border-radius:50%;transition:.15s}
+.chip i:hover{color:#ff1a1a;background:#2a0a0a}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.filters input,.filters select{padding:10px 14px;font-size:13px}
+.status{display:flex;justify-content:space-between;gap:14px;padding:10px 14px;background:#1a1a1a;border-radius:8px;font-size:11px;color:#888;margin-bottom:10px;flex-wrap:wrap}
+.status b{color:#ff6666}
+.status .cur{flex:1;color:#666;font-family:monospace;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl;text-align:left}
+.results{background:#141414;border:1px solid #2a2a2a;border-radius:10px;max-height:55vh;overflow-y:auto}
+.row{padding:10px 16px;border-bottom:1px solid #222;display:flex;align-items:center;gap:14px;font-size:12px;transition:.1s}
+.row:hover{background:#1f1010;border-left:3px solid #ff1a1a;padding-left:13px}
+.path{color:#ddd;word-break:break-all;flex:1;font-family:'Consolas',monospace}
+.openbtn{background:transparent;border:1px solid #444;color:#ff6666;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:14px;box-shadow:none;transition:.15s}
+.openbtn:hover{border-color:#ff1a1a;background:#2a0a0a;box-shadow:0 0 12px rgba(255,30,30,.5);transform:none}
+.menu{position:fixed;background:#1a1a1a;border:1px solid #ff1a1a;border-radius:8px;box-shadow:0 0 25px rgba(255,30,30,.4);padding:6px;z-index:1000;min-width:200px;display:none}
+.menu.on{display:block}
+.menu div{padding:9px 14px;font-size:12px;color:#ddd;cursor:pointer;border-radius:5px;display:flex;align-items:center;gap:10px}
+.menu div:hover{background:#2a0a0a;color:#ff6666}
+.menu i{color:#ff6666;font-size:14px;width:16px}
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1a1a;border:1px solid #ff1a1a;color:#fff;padding:12px 18px;border-radius:8px;box-shadow:0 0 20px rgba(255,30,30,.5);font-size:12px;z-index:1001;opacity:0;transition:.3s;pointer-events:none}
+.toast.on{opacity:1}
+.tag{display:inline-block;padding:1px 6px;background:#2a0a0a;border:1px solid #661a1a;border-radius:3px;color:#ff6666;font-size:9px;margin-right:6px;vertical-align:middle}
+.size{color:#ff6666;white-space:nowrap;font-weight:600;min-width:80px;text-align:right}
+.results::-webkit-scrollbar{width:8px}
+.results::-webkit-scrollbar-track{background:#141414}
+.results::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#ff1a1a,#660000);border-radius:4px}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid #333;border-top-color:#ff1a1a;border-radius:50%;animation:sp .8s linear infinite;vertical-align:middle;margin-right:6px}
+.spinner.off{display:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+.empty{padding:40px;text-align:center;color:#555;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Disk Scanner v1.0 - By Pale100</h1>
+<div class="sub">Gelişmiş disk tarama sistemi ile aradığınız dosyaları anında bulun. Telegram: palesoftware</div>
+
+<div class="panel">
+  <div class="label">Diskler <button class="mini" onclick="toggleAll(true)">Tümünü Seç</button><button class="mini" onclick="toggleAll(false)">Temizle</button></div>
+  <div class="drives" id="drives">
+    {% for d in drives %}
+    <div class="drive on" data-d="{{ d.letter }}" onclick="this.classList.toggle('on')">
+      {{ d.letter }}<small>{{ (d.free//(1024*1024*1024))|int }}/{{ (d.total//(1024*1024*1024))|int }} GB</small>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="bar">
+  <input id="q" type="text" placeholder="Arama (boşlukla çoklu kelime, hepsi eşleşmeli)..." autofocus>
+  <button id="btn" onclick="toggle()">ARA</button>
+</div>
+
+<div class="panel" id="recentPanel" style="display:none">
+  <div class="label">Son Aramalar</div>
+  <div class="recent" id="recent"></div>
+</div>
+
+<div class="filters">
+  <input id="filt" type="text" placeholder="Sonuçlar içinde filtrele...">
+  <select id="filtDrive"><option value="">Tüm diskler</option></select>
+  <select id="sort">
+    <option value="0">Sıralama yok</option>
+    <option value="asc">Boyut: küçük → büyük</option>
+    <option value="desc">Boyut: büyük → küçük</option>
+    <option value="name">İsim A-Z</option>
+  </select>
+</div>
+
+<div class="status">
+  <span><span class="spinner off" id="sp"></span><b id="hits">0</b> sonuç</span>
+  <span>Tarandı: <b id="scanned">0</b></span>
+  <span>Süre: <b id="el">0s</b></span>
+  <span class="cur" id="cur"></span>
+</div>
+
+<div class="results" id="res"><div class="empty">Disk seç, kelime yaz, ARA'ya bas</div></div>
+</div>
+
+<script>
+let es=null, all=[], filtered=[];
+const q=document.getElementById('q'), btn=document.getElementById('btn'), res=document.getElementById('res');
+const sp=document.getElementById('sp'), hitsEl=document.getElementById('hits'), scEl=document.getElementById('scanned'), elEl=document.getElementById('el'), curEl=document.getElementById('cur');
+const filt=document.getElementById('filt'), filtDrive=document.getElementById('filtDrive'), sortEl=document.getElementById('sort');
+
+function fmt(b){if(!b)return '-';const u=['B','KB','MB','GB','TB'];let i=0;while(b>=1024&&i<4){b/=1024;i++}return b.toFixed(1)+' '+u[i]}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+function toggleAll(on){document.querySelectorAll('.drive').forEach(d=>d.classList.toggle('on',on))}
+function selectedDrives(){return [...document.querySelectorAll('.drive.on')].map(d=>d.dataset.d)}
+
+function loadRecent(){
+  const r=JSON.parse(localStorage.getItem('recent')||'[]');
+  const p=document.getElementById('recentPanel'), c=document.getElementById('recent');
+  if(!r.length){p.style.display='none';return}
+  p.style.display='block';
+  c.innerHTML=r.map(x=>`<span class="chip" data-t="${esc(x)}">${esc(x)} <i class="bi bi-arrow-clockwise" data-re="${esc(x)}" title="Yeniden tara"></i></span>`).join('');
+}
+function pushRecent(term){
+  let r=JSON.parse(localStorage.getItem('recent')||'[]');
+  r=[term,...r.filter(x=>x!==term)].slice(0,5);
+  localStorage.setItem('recent',JSON.stringify(r));
+  loadRecent();
+}
+function saveCache(term,data){
+  try{
+    const cache=JSON.parse(localStorage.getItem('cache')||'{}');
+    cache[term]={results:data.slice(0,1500),ts:Date.now()};
+    const keep=JSON.parse(localStorage.getItem('recent')||'[]');
+    Object.keys(cache).forEach(k=>{if(!keep.includes(k))delete cache[k]});
+    localStorage.setItem('cache',JSON.stringify(cache));
+  }catch(_){}
+}
+function loadCache(term){
+  try{return (JSON.parse(localStorage.getItem('cache')||'{}'))[term]}catch(_){return null}
+}
+function showCached(term){
+  const c=loadCache(term);
+  if(!c){q.value=term;start();return}
+  q.value=term;
+  all=c.results;
+  hitsEl.textContent=all.length;
+  elEl.textContent='cache';
+  scEl.textContent='-';
+  curEl.textContent='Önbellekten yüklendi ('+new Date(c.ts).toLocaleString()+')';
+  updateDriveFilter();
+  render();
+}
+document.getElementById('recent').addEventListener('click',e=>{
+  const re=e.target.closest('[data-re]');
+  if(re){e.stopPropagation();q.value=re.dataset.re;start();return}
+  const chip=e.target.closest('[data-t]');
+  if(chip)showCached(chip.dataset.t);
+});
+
+function render(){
+  const f=filt.value.toLowerCase(), fd=filtDrive.value, s=sortEl.value;
+  filtered=all.filter(x=>(!f||x.path.toLowerCase().includes(f))&&(!fd||x.drive===fd));
+  if(s==='asc')filtered.sort((a,b)=>a.size-b.size);
+  else if(s==='desc')filtered.sort((a,b)=>b.size-a.size);
+  else if(s==='name')filtered.sort((a,b)=>a.path.localeCompare(b.path));
+  if(!filtered.length){res.innerHTML='<div class="empty">Sonuç yok</div>';return}
+  const slice=filtered.slice(0,2000);
+  res.innerHTML=slice.map((x,i)=>`<div class="row" data-i="${i}"><span class="path"><span class="tag">${x.dir?'DIR':x.drive.replace(':\\\\','')}</span>${esc(x.path)}</span><span class="size">${fmt(x.size)}</span><button class="openbtn" title="Klasörde göster" data-act="open"><i class="bi bi-folder2-open"></i></button></div>`).join('');
+}
+function getItem(e){const r=e.target.closest('.row');return r?filtered[+r.dataset.i]:null}
+res.addEventListener('click',e=>{
+  if(!e.target.closest('[data-act="open"]'))return;
+  const item=getItem(e);if(!item)return;
+  fetch('/open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:item.path})});
+});
+res.addEventListener('contextmenu',e=>{
+  const item=getItem(e);if(!item)return;
+  e.preventDefault();showMenu(e.clientX,e.clientY,item);
+});
+
+const menu=document.createElement('div');menu.className='menu';
+menu.innerHTML=`
+<div data-m="name"><i class="bi bi-file-earmark-text"></i>Dosya ismini kopyala</div>
+<div data-m="path"><i class="bi bi-link-45deg"></i>Full konumu kopyala</div>
+<div data-m="folder"><i class="bi bi-folder2-open"></i>Klasörde göster</div>
+<div data-m="desktop"><i class="bi bi-download"></i>Masaüstüne kopyala</div>`;
+document.body.appendChild(menu);
+let menuItem=null;
+function showMenu(x,y,item){
+  menuItem=item;
+  menu.classList.add('on');
+  const vw=innerWidth,vh=innerHeight;
+  menu.style.left=Math.min(x,vw-220)+'px';
+  menu.style.top=Math.min(y,vh-200)+'px';
+}
+function hideMenu(){menu.classList.remove('on')}
+document.addEventListener('click',e=>{if(!menu.contains(e.target))hideMenu()});
+document.addEventListener('scroll',hideMenu,true);
+window.addEventListener('resize',hideMenu);
+
+const toast=document.createElement('div');toast.className='toast';document.body.appendChild(toast);
+function showToast(msg){toast.textContent=msg;toast.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>toast.classList.remove('on'),2200)}
+async function copyText(t){
+  try{await navigator.clipboard.writeText(t)}
+  catch(_){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove()}
+}
+menu.addEventListener('click',async e=>{
+  const a=e.target.closest('[data-m]');if(!a||!menuItem)return;
+  const m=a.dataset.m,it=menuItem;
+  hideMenu();
+  if(m==='name'){const n=it.path.split(/[\\\/]/).pop();await copyText(n);showToast('Dosya ismi kopyalandı: '+n)}
+  else if(m==='path'){await copyText(it.path);showToast('Konum kopyalandı')}
+  else if(m==='folder'){fetch('/open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:it.path})});showToast('Klasörde gösteriliyor...')}
+  else if(m==='desktop'){
+    showToast('Masaüstüne kopyalanıyor...');
+    const r=await fetch('/copy_to_desktop',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:it.path})});
+    const d=await r.json();
+    showToast(d.ok?'Masaüstüne kopyalandı':'Hata: '+(d.error||'bilinmeyen'));
+  }
+});
+filt.addEventListener('input',render);
+filtDrive.addEventListener('change',render);
+sortEl.addEventListener('change',render);
+
+function updateDriveFilter(){
+  const set=[...new Set(all.map(x=>x.drive))];
+  filtDrive.innerHTML='<option value="">Tüm diskler</option>'+set.map(d=>`<option value="${d}">${d}</option>`).join('');
+}
+
+function start(){
+  if(es){stop();return}
+  const term=q.value.trim();
+  const dr=selectedDrives();
+  if(!term||!dr.length){alert('Disk seç ve kelime gir');return}
+  pushRecent(term);
+  all=[];filtered=[];res.innerHTML='<div class="empty">Tarama başladı...</div>';
+  hitsEl.textContent='0';scEl.textContent='0';elEl.textContent='0s';curEl.textContent='';
+  sp.classList.remove('off');btn.textContent='DURDUR';btn.classList.add('stop');
+  const url='/search?q='+encodeURIComponent(term)+'&drives='+encodeURIComponent(dr.join(','))+'&limit=5000';
+  es=new EventSource(url);
+  es.addEventListener('results',e=>{
+    const arr=JSON.parse(e.data);
+    all.push(...arr);
+    hitsEl.textContent=all.length;
+    if(all.length<=arr.length)updateDriveFilter();
+    render();
+  });
+  es.addEventListener('progress',e=>{
+    const d=JSON.parse(e.data);
+    scEl.textContent=d.scanned.toLocaleString();
+    elEl.textContent=d.elapsed+'s';
+    curEl.textContent=d.current;
+  });
+  es.addEventListener('done',e=>{
+    const d=JSON.parse(e.data);
+    elEl.textContent=d.elapsed+'s';
+    scEl.textContent=d.scanned.toLocaleString();
+    curEl.textContent='Tamamlandı';
+    updateDriveFilter();
+    saveCache(term,all);
+    stop();
+  });
+  es.onerror=()=>stop();
+}
+function stop(){
+  if(es){es.close();es=null}
+  sp.classList.add('off');btn.textContent='ARA';btn.classList.remove('stop');
+}
+function toggle(){start()}
+q.addEventListener('keydown',e=>{if(e.key==='Enter')start()});
+loadRecent();
+</script>
+</body>
+</html>
